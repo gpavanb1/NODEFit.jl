@@ -44,18 +44,3 @@ function fit_node(dudt::Lux.Chain, t, ode_data, plot_train=true)
 
     result_neuralode
 end
-
-
-# u0 = Float32[2.0; 0.0]
-# datasize = 30
-# tspan = (0.0f0, 1.5f0)
-# tsteps = collect(Float32, range(tspan[1], tspan[2]; length=datasize))
-
-# function trueODEfunc(du, u, p, t)
-#     true_A = [-0.1 2.0; -2.0 -0.1]
-#     du .= ((u .^ 3)'true_A)'
-# end
-
-# prob_trueode = ODEProblem(trueODEfunc, u0, tspan)
-# ode_data = Array(solve(prob_trueode, Tsit5(); saveat=tsteps))
-#callback(pinit, loss_neuralode(pinit)...; doplot=true)
