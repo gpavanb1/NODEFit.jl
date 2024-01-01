@@ -1,4 +1,4 @@
-using ComponentArrays, Lux, DiffEqFlux, OrdinaryDiffEq, Optimization,
+using ComponentArrays, Lux, DiffEqFlux, OrdinaryDiffEq, Optimization, OptimizationOptimJL,
     OptimizationOptimisers, Random, Plots
 
 using Lux: Chain
@@ -33,14 +33,17 @@ function fit_node(dudt::Lux.Chain, t, ode_data, plot_train=true)
 
     pinit = ComponentArray(p)
 
-    # use Optimization.jl to solve the problem
+    # First round of training
     adtype = Optimization.AutoZygote()
-
     optf = Optimization.OptimizationFunction((x, p) -> loss_neuralode(x), adtype)
     optprob = Optimization.OptimizationProblem(optf, pinit)
-
     result_neuralode = Optimization.solve(optprob, OptimizationOptimisers.ADAM(0.05); callback=callback,
-        maxiters=300)
+        maxiters=200)
 
-    result_neuralode
+    # Second round of training
+    optprob2 = remake(optprob; u0=result_neuralode.u)
+    result_neuralode2 = Optimization.solve(optprob2, Optim.BFGS(; initial_stepnorm=0.01);
+        callback=callback, allow_f_increases=false, maxiters=200)
+
+    result_neuralode2
 end

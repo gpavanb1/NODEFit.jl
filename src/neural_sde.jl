@@ -1,4 +1,4 @@
-using Plots, Statistics, ComponentArrays, Optimization,
+using Plots, Statistics, ComponentArrays, Optimization, OptimizationOptimJL,
     OptimizationOptimisers, DiffEqFlux, StochasticDiffEq, Random
 using Lux
 
@@ -52,7 +52,12 @@ function fit_nsde(drift_dudt::Lux.Chain, diffusion_dudt::Lux.Dense, t, sde_data,
     adtype = Optimization.AutoZygote()
     optf = Optimization.OptimizationFunction((x, p) -> loss_neuralsde(x), adtype)
     optprob = Optimization.OptimizationProblem(optf, ps)
-    result_neuralsde = Optimization.solve(optprob, opt; callback, maxiters=500)
+    result_neuralsde = Optimization.solve(optprob, opt; callback, maxiters=200)
 
-    result_neuralsde
+    # Second round of training
+    optprob2 = remake(optprob; u0=result_neuralsde.u)
+    result_neuralsde2 = Optimization.solve(optprob2, Optim.BFGS(; initial_stepnorm=0.01);
+        callback=callback, allow_f_increases=false, maxiters=200)
+
+    result_neuralsde2
 end
